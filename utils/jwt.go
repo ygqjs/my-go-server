@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -26,4 +27,38 @@ func GenerateToken(username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	// 使用密钥签名 Token
 	return token.SignedString(jwtSecret)
+}
+
+// ParseToken 解析JWT token，返回username和过期时间
+// Claims 自定义声明结构体
+type Claims struct {
+	Username string `json:"username"`
+	jwt.RegisteredClaims
+}
+func ParseToken(tokenString string) (username string, err error) {
+	// 解析token
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		// 验证签名方法
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(jwtSecret), nil
+	})
+
+	// 处理解析错误
+	if err != nil {
+		return "", err
+	}
+
+	// 验证token是否有效
+	if !token.Valid {
+		return "", errors.New("invalid token")
+	}
+
+	// 提取claims
+	if claims, ok := token.Claims.(*Claims); ok {
+		return claims.Username, nil
+	}
+
+	return "", errors.New("invalid claims")
 }

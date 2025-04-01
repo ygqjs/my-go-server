@@ -10,5 +10,6 @@ func UserRoutes(r *gin.Engine) {
 	userRoutes := r.Group("/user")
 	{
 		userRoutes.POST("/login", user.UserController{}.Login) // 调用导出的 Login 方法
+		userRoutes.GET("/user-info", user.UserController{}.GetUserInfo)
 	}
 }
