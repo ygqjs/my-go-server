@@ -6,6 +6,7 @@ import (
 
 	"my-go-server/config"
 	"my-go-server/database"
+	"my-go-server/middleware"
 	"my-go-server/routes"
 
 	"github.com/gin-gonic/gin"
@@ -18,6 +19,10 @@ func main() {
 	database.ConnectDB()
 	// 创建默认的gin引擎
 	r := gin.Default()
+	r.RedirectTrailingSlash = false // 禁用尾部斜杠重定向
+	r.RedirectFixedPath = false      // 禁用路径修正重定向
+	// 注册全局中间件
+  r.Use(middleware.NoCache()) // 禁用缓存
 	// 注册路由
 	routes.UserRoutes(r)
 	// 启动服务器

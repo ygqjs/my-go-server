@@ -1,11 +1,9 @@
 package models
 
 type User struct {
-	UserName string `gorm:"column:username"`
-	Password string `gorm:"column:password"`
-}
-
-// 表示配置操作数据库的表名称
-func (User) TableName() string {
-	return "user"
+	Id string `gorm:"column:id" json:"id"`
+	UserName string `gorm:"column:username" json:"username"`
+	Address string `gorm:"column:address" json:"address"`
+	Sex string `gorm:"column:sex" json:"sex"`
+	Password string `gorm:"column:password" json:"password"`
 }

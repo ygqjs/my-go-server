@@ -21,7 +21,7 @@ func GenerateToken(username string) (string, error) {
 	// 定义 Token 的声明
 	claims := jwt.MapClaims{
 		"username": username, // 自定义字段
-		"exp":  time.Now().Add(time.Minute * 15).Unix(), // 过期时间 (24小时)
+		"exp":  time.Now().Add(time.Minute * 120).Unix(), // 过期时间 (24小时)
 	}
 	// 创建Token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
