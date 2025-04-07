@@ -120,7 +120,7 @@ func (userController UserController) AddUser(ctx *gin.Context) {
   }
 
   // 新增用户
-  execResult := database.DB.Exec("INSERT INTO user (username, password) VALUES (?, ?)", user.UserName, user.Password)
+  execResult := database.DB.Exec("INSERT INTO user (username, password, address, sex) VALUES (?, ?, ?, ?)", user.UserName, user.Password, user.Address, user.Sex)
   if execResult.Error != nil {
     ctx.JSON(http.StatusInternalServerError, gin.H{
       "success": false,
@@ -140,11 +140,17 @@ func (userController UserController) AddUser(ctx *gin.Context) {
 */
 func (userController UserController) DeleteUser(ctx *gin.Context) {
   // 获取删除用户的参数
-  username := ctx.Query("username")
+  var user models.User
+  if err := ctx.ShouldBindJSON(&user); err != nil {
+    ctx.JSON(http.StatusBadRequest, gin.H{
+      "success": false,
+      "message": "参数错误",
+    })
+    return
+  }
 
   // 检查用户是否存在
-  var user models.User
-  result := database.DB.Raw("SELECT * FROM user WHERE username = ? LIMIT 1", username).Scan(&user)
+  result := database.DB.Raw("SELECT * FROM user WHERE username = ? LIMIT 1", user.UserName).Scan(&user)
   if result.RowsAffected == 0 {
     ctx.JSON(http.StatusNotFound, gin.H{
       "success": false,
@@ -154,8 +160,8 @@ func (userController UserController) DeleteUser(ctx *gin.Context) {
   }
 
   // 检查是否试图删除管理员
-  if username == "admin" {
-    ctx.JSON(http.StatusForbidden, gin.H{
+  if user.UserName == "admin" {
+    ctx.JSON(http.StatusOK, gin.H{
       "success": false,
       "message": "管理员用户不能被删除",
     })
@@ -163,7 +169,7 @@ func (userController UserController) DeleteUser(ctx *gin.Context) {
   }
 
   // 删除用户
-  execResult := database.DB.Exec("DELETE FROM user WHERE username = ?", username)
+  execResult := database.DB.Exec("DELETE FROM user WHERE username = ?", user.UserName)
   if execResult.Error != nil {
     ctx.JSON(http.StatusInternalServerError, gin.H{
       "success": false,
@@ -183,11 +189,8 @@ func (userController UserController) DeleteUser(ctx *gin.Context) {
 */
 func (userController UserController) UpdateUser(ctx *gin.Context) {
   // 获取修改用户的参数
-  var params struct {
-    Username    string `json:"username"`
-    NewPassword string `json:"newPassword"`
-  }
-  if err := ctx.ShouldBindJSON(&params); err != nil {
+  var user models.User
+  if err := ctx.ShouldBindJSON(&user); err != nil {
     ctx.JSON(http.StatusBadRequest, gin.H{
       "success": false,
       "message": "参数错误",
@@ -196,18 +199,19 @@ func (userController UserController) UpdateUser(ctx *gin.Context) {
   }
 
   // 检查用户是否存在
-  var user models.User
-  result := database.DB.Raw("SELECT * FROM user WHERE username = ? LIMIT 1", params.Username).Scan(&user)
+  var existingUser models.User
+  result := database.DB.Raw("SELECT * FROM user WHERE id = ? LIMIT 1", user.Id).Scan(&existingUser)
   if result.RowsAffected == 0 {
-    ctx.JSON(http.StatusNotFound, gin.H{
+    ctx.JSON(http.StatusOK, gin.H{
       "success": false,
-      "message": "用户不存在",
+      "message": "用户名不支持修改",
     })
     return
   }
 
-  // 修改用户密码
-  execResult := database.DB.Exec("UPDATE user SET password = ? WHERE username = ?", params.NewPassword, params.Username)
+  // 修改用户信息
+  execResult := database.DB.Exec("UPDATE user SET username = ?, password = ?, address = ?, sex = ? WHERE id = ?",
+    user.UserName, user.Password, user.Address, user.Sex, user.Id)
   if execResult.Error != nil {
     ctx.JSON(http.StatusInternalServerError, gin.H{
       "success": false,
@@ -218,7 +222,7 @@ func (userController UserController) UpdateUser(ctx *gin.Context) {
 
   ctx.JSON(http.StatusOK, gin.H{
     "success": true,
-    "message": "用户密码修改成功",
+    "message": "用户信息修改成功",
   })
 }
 
