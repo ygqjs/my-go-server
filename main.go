@@ -23,6 +23,7 @@ func main() {
 	r.RedirectFixedPath = false      // 禁用路径修正重定向
 	// 注册全局中间件
   r.Use(middleware.NoCache()) // 禁用缓存
+  r.Use(middleware.AuthMiddleware()) // 禁用缓存
 	// 注册路由
 	routes.UserRoutes(r)
 	// 启动服务器

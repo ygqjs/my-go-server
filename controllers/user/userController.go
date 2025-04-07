@@ -59,6 +59,37 @@ func (userController UserController) Login(ctx *gin.Context) {
 }
 
 /**
+* 登出
+*/
+func (userController UserController) Logout(ctx *gin.Context) {
+  // 获取请求头中的 Token
+  token := ctx.GetHeader("token")
+  if token == "" {
+    ctx.JSON(http.StatusBadRequest, gin.H{
+      "success": false,
+      "message": "缺少 token 参数",
+    })
+    return
+  }
+
+  // 将 Token 插入到 token_blacklists 表中
+  execResult := database.DB.Exec("INSERT INTO token_blacklists (token) VALUES (?)", token)
+  if execResult.Error != nil {
+    ctx.JSON(http.StatusInternalServerError, gin.H{
+      "success": false,
+      "message": "登出失败，无法处理 token",
+    })
+    return
+  }
+
+  ctx.JSON(http.StatusOK, gin.H{
+    "success": true,
+    "message": "登出成功",
+  })
+}
+
+
+/**
 * 获取用户信息
 */
 func (userController UserController) GetUserInfo(ctx *gin.Context) {
