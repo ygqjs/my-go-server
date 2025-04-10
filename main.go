@@ -26,6 +26,7 @@ func main() {
   r.Use(middleware.AuthMiddleware()) // 禁用缓存
 	// 注册路由
 	routes.UserRoutes(r)
+	routes.UploadRoutes(r)
 	// 启动服务器
 	port := fmt.Sprintf(":%s", cfg.Server.Port)
 	log.Printf("服务器启动在 http://localhost%s\n", port)
